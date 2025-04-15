@@ -35,12 +35,12 @@ class Evenement {
   // 📥 Constructeur nommé fromMap
   factory Evenement.fromMap(Map<String, dynamic> map, {String? id}) {
     return Evenement(
-      id: id,
-      description: map[fieldDescription],
-      date: map[fieldDate],
-      heureDebut: map[fieldHeureDebut],
-      heureFin: map[fieldHeureFin],
-      animateur: map[fieldAnimateur],
+      id: id ?? '',
+      description: map[fieldDescription] ?? '',
+      date: map[fieldDate] ?? '',
+      heureDebut: map[fieldHeureDebut] ?? '',
+      heureFin: map[fieldHeureFin] ?? '',
+      animateur: map[fieldAnimateur] ?? '',
       estFavori: map[fieldEstFavori] ?? false,
     );
   }

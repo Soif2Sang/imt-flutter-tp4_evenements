@@ -2,8 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
-import 'page_connexion.dart';  // Importez votre page de connexion
-import 'page_evenements.dart';  // Importez votre page des événements
+import 'pages/page_connexion.dart';  // Importez votre page de connexion
+import 'pages/page_evenements.dart';  // Importez votre page des événements
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:tp4/evenement.dart';
+import 'package:tp4/modeles/evenement.dart';
 
 class GestionFirestore {
   static final FirebaseFirestore bdd = FirebaseFirestore.instance;
@@ -20,6 +20,7 @@ class GestionFirestore {
 
   // 🔁 Transformation des données Firestore en objets Evenement
   static List<Evenement> lireListeEvenements(QuerySnapshot snapshot) {
+    print('===> Lecture des données Firestore'); print(snapshot.docs);
     return snapshot.docs
         .map((doc) => Evenement.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
         .toList();
@@ -38,5 +39,12 @@ class GestionFirestore {
         .collection(COLLECTION_EVENEMENT)
         .doc(evenement.id)
         .update(evenement.toMap());
+  }
+
+  static supprimerEvenementDansFirebase(Evenement evenement) {
+    return bdd
+        .collection(COLLECTION_EVENEMENT)
+        .doc(evenement.id)
+        .delete();
   }
 }

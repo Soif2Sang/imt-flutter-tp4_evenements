@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:tp4/gestion_firestore.dart';
-import 'package:tp4/evenement.dart';
+import 'package:tp4/services/gestion_firestore.dart';
+import 'package:tp4/modeles/evenement.dart';
+import '../widgets/dialogue_evenement.dart'; // Importez le nouveau fichier
 
 class PageEvenements extends StatefulWidget {
   final String uid;
@@ -42,6 +42,37 @@ class _PageEvenementsState extends State<PageEvenements> {
     Navigator.of(context).pushReplacementNamed('/connexion');
   }
 
+  void _afficherDialogueAjoutEvenement() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return const DialogueEvenement();
+      },
+    );
+
+    if (result == true) {
+      // Si l'événement a été ajouté, rechargez la liste des événements
+      setState(() {
+        _evenementsFuture = _chargerEvenements();
+      });
+    }
+  }
+
+  void _afficherDialogueModificationEvenement(Evenement evenement) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return DialogueEvenement(evenement: evenement);
+      },
+    );
+
+    if (result == true) {
+      setState(() {
+        _evenementsFuture = _chargerEvenements();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,6 +89,7 @@ class _PageEvenementsState extends State<PageEvenements> {
       body: FutureBuilder<List<Evenement>>(
         future: _evenementsFuture,
         builder: (context, snapshot) {
+          // ... (votre code existant pour la gestion des états de FutureBuilder)
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: Column(
@@ -73,6 +105,8 @@ class _PageEvenementsState extends State<PageEvenements> {
               ),
             );
           } else if (snapshot.hasError) {
+            print('Snapshot: ${snapshot}');
+            print('Erreur lors de la récupération des données: ${snapshot.error}');
             return const Center(
               child: Text(
                 'Erreur lors de la récupération des données.',
@@ -94,20 +128,46 @@ class _PageEvenementsState extends State<PageEvenements> {
             itemCount: evenements.length,
             itemBuilder: (context, index) {
               final evenement = evenements[index];
-              return ListTile(
-                title: Text(evenement.description),
-                subtitle: Text('${evenement.date} • ${evenement.heureDebut} - ${evenement.heureFin}'),
-                trailing: IconButton(
-                  icon: Icon(
-                    evenement.estFavori ? Icons.star : Icons.star_border,
-                    color: evenement.estFavori ? Colors.amber : Colors.grey,
+              return Dismissible(
+                key: Key(evenement.id ?? index.toString()), // Utilisez l'ID de l'événement comme clé
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                onDismissed: (direction) async {
+                  await GestionFirestore.supprimerEvenementDansFirebase(evenement);
+                  setState(() {
+                    _evenementsFuture = _chargerEvenements();
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Événement supprimé')),
+                  );
+                },
+                child: ListTile(
+                  title: Text(evenement.description),
+                  subtitle: Text('${evenement.date} • ${evenement.heureDebut} - ${evenement.heureFin}'),
+                  trailing: IconButton(
+                    icon: Icon(
+                      evenement.estFavori ? Icons.star : Icons.star_border,
+                      color: evenement.estFavori ? Colors.amber : Colors.grey,
+                    ),
+                    onPressed: () => _basculerEtatFavori(evenement),
                   ),
-                  onPressed: () => _basculerEtatFavori(evenement),
+                  onLongPress: () {
+                    _afficherDialogueModificationEvenement(evenement);
+                  },
                 ),
               );
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _afficherDialogueAjoutEvenement,
+        child: const Icon(Icons.add),
       ),
     );
   }
